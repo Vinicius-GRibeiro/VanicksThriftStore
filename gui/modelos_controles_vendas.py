@@ -67,7 +67,7 @@ class BotaoParaOSubMenu:
             self._tabs.selected_index = 0
             ctrl_vv.redefinir_view_vendas_novo(pagina=self._pagina, caixas_de_pesquisa=self._caixas_de_pesquisa,
                                                tabela=None)
-                                # TODO: AQUIIIII MALUCO
+            # TODO: AQUIIIII MALUCO
 
         elif self._rota == 'consultar':
             self._tabs.selected_index = 1
@@ -324,10 +324,82 @@ class CaixaDeEscolha:
         return item, item_container
 
 
+class TabelaCarrinhoDeCompras:
+    def __init__(self, pagina: ft.Page, altura: int, valor_total: ft.TextField = None):
+        self.pagina = pagina
+        self.altura = altura
+        self.linhas_tabela: list[ft.DataRow] = []
+        self.item_tabela = self._item_tabela_produtos()
+        self._valor_total = valor_total
+        self.ids_produtos_utilizados = []
+
+    def _item_tabela_produtos(self) -> ft.DataTable:
+        tabela = ft.DataTable(
+            height=self.altura,
+            heading_text_style=ft.TextStyle(size=10, weight=ft.FontWeight.BOLD),
+            data_text_style=ft.TextStyle(size=10),
+            divider_thickness=1,
+            horizontal_lines=ft.BorderSide(width=5, color=ft.colors.YELLOW_ACCENT_100),
+            column_spacing=70,
+            heading_row_height=35,
+            data_row_max_height=35,
+            data_row_min_height=35,
+            columns=[
+                self.coluna_tabela_produtos(titulo_coluna='Cód.'),
+                self.coluna_tabela_produtos(titulo_coluna='Prod.'),
+                self.coluna_tabela_produtos(titulo_coluna='Qntd.'),
+                self.coluna_tabela_produtos(titulo_coluna='Total'),
+            ],
+            rows=self.linhas_tabela
+        )
+
+        return tabela
+
+    @staticmethod
+    def coluna_tabela_produtos(titulo_coluna: str) -> ft.DataColumn:
+        return ft.DataColumn(
+            label=ft.Text(value=titulo_coluna)
+        )
+
+    def adicionar_linha_tabela_produtos(self, dados: tuple):
+        self.ids_produtos_utilizados.append(dados[0])
+
+        if dados[2] <= 0:
+            return None
+
+        linha = ft.DataRow(
+            cells=[
+                ft.DataCell(ft.Text(value=dados[0])),  # cod
+                ft.DataCell(ft.Text(value=dados[1])),  # nome
+                ft.DataCell(ft.Text(value=f'{dados[2]}x')),  # qntd
+                ft.DataCell(ft.Text(value=f'R${dados[3]:.2f}')),  # val total
+            ],
+            on_select_changed=lambda e: self.ao_clicar_no_produto_do_carrinho(dados=dados)
+        )
+
+        self.linhas_tabela.append(linha)
+        self.pagina.update()
+
+    def ao_clicar_no_produto_do_carrinho(self, dados: tuple):
+        indice = 0
+        for linha in self.linhas_tabela:
+            if linha.cells[0].content.value == dados[0]:
+                break
+            indice += 1
+
+        self.ids_produtos_utilizados.remove(dados[0])
+        print(self.ids_produtos_utilizados)
+        self.linhas_tabela.pop(indice)
+
+        self._valor_total.value = round(float(self._valor_total.value) - dados[-1], 2)
+        self.pagina.update()
+
+
 class TabelaProdutos:
     def __init__(self, pagina: ft.Page, largura_tabela: int = 500, altura_cabecalho: int = 50,
                  altura_caixa_e_container: int = 70, largura_caixa_container: int = 100,
-                 pad_cima: int = 0, pad_baixo: int = 0, pad_direita: int = 0, pad_esquerda: int = 0, ):
+                 pad_cima: int = 0, pad_baixo: int = 0, pad_direita: int = 0, pad_esquerda: int = 0,
+                 carrinho_compras: TabelaCarrinhoDeCompras = None, valor_total: ft.TextField = None):
         self._pagina = pagina
         self._altura_caixa_e_container = altura_caixa_e_container
         self._largura_caixa_e_container = largura_caixa_container
@@ -338,6 +410,8 @@ class TabelaProdutos:
         self._pad_baixo = pad_baixo
         self._pad_direita = pad_direita
         self._pad_esquerda = pad_esquerda
+        self._carrinho_de_compras = carrinho_compras
+        self._valor_total = valor_total
         self.item, self.item_container = self._item_tabela_produtos()
 
     def _item_tabela_produtos(self):
@@ -380,7 +454,6 @@ class TabelaProdutos:
             width=self._largura_caixa_e_container,
             content=item,
             alignment=ft.alignment.top_center,
-            # bgcolor='blue'
         )
 
         return item, item_container
@@ -392,16 +465,33 @@ class TabelaProdutos:
         )
 
     def adicionar_linha_tabela_produtos(self, dados: tuple):
+        if dados[2] <= 0:
+            return None
+
         linha = ft.DataRow(
             cells=[
                 ft.DataCell(ft.Text(value=dados[0])),
                 ft.DataCell(ft.Text(value=dados[1])),
                 ft.DataCell(ft.Text(value=dados[2])),
                 ft.DataCell(ft.Text(value=dados[3])),
-            ]
+            ],
+            on_select_changed=lambda e: self._ao_clicar_no_produto(dados=dados)
         )
 
         self._linhas_tabela.append(linha)
+        self._pagina.update()
+
+    def _ao_clicar_no_produto(self, dados: tuple):
+        id_ = dados[0]
+        nome = dados[1]
+        qntd_total = dados[2]
+        val = dados[3]
+
+        if qntd_total <= 0:
+            return None
+
+        self._carrinho_de_compras.adicionar_linha_tabela_produtos(dados=(id_, nome, 1, val))
+        self._valor_total.value = round(float(self._valor_total.value) + val, 2)
         self._pagina.update()
 
 
@@ -478,7 +568,7 @@ class BotaoIconePadrao:
                     return None
 
                 util.mostrar_notificacao(page=self._pagina, mensagem='Parece que não existe nenhum produto'
-                                                                         ' com os filtros inseridos', emoji='😵')
+                                                                     ' com os filtros inseridos', emoji='😵')
                 for item_ in self._itens_pesquisa:
                     item_.item.value = ''
             case 'redefinir':
@@ -491,5 +581,19 @@ class BotaoIconePadrao:
                 for reg in registros:
                     self._tabela.adicionar_linha_tabela_produtos(reg)
 
-
         self._pagina.update()
+
+
+class TextoPadraoDoResumoDaCompra:
+    def __init__(self, texto: str, tamanho: int = 10, bold: bool = False):
+        self._texto = texto
+        self._tamanho = tamanho
+        self._bold = bold
+        self.item_texto = self._item_texto()
+
+    def _item_texto(self):
+        return ft.Text(
+            value=self._texto,
+            size=self._tamanho,
+            weight=ft.FontWeight.BOLD if self._bold else None
+        )
