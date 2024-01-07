@@ -105,14 +105,14 @@ class SGBD:
             self._cursor.execute(query, valores)
             self._conexao.commit()
 
-            self._desconectar()
             self._log.registrar_info(mensagem=f'Registro inserido. "{str(tipo).capitalize()}" - {valores}\n')
             return True
         except _possiveis_excecoes as e:
-            self._desconectar()
             self._log.registrar_erro(mensagem=f'Erro ao inserir registro. "{str(tipo).capitalize()}" - {valores}\n\t'
                                               f'Descrição do erro: {e}\n')
             return False
+        finally:
+            self._desconectar()
 
     def recuperar_registros(self, tabela: str, colunas: str | tuple = '*',
                             condicao: str = None, ordernar_por_coluna: str = None):
@@ -128,13 +128,13 @@ class SGBD:
 
             self._cursor.execute(query)
             dados = self._cursor.fetchall()
-            self._desconectar()
             return dados
         except _possiveis_excecoes as e:
             self._log.registrar_erro(mensagem=f'Houve um erro ao tentar recuperar os registros da tabela "{tabela}".'
                                               f' Query "{query}".\n\tDescrição do erro: {e}\n')
-            self._desconectar()
             return None
+        finally:
+            self._desconectar()
 
     def recuperar_proximo_id(self, tabela: str):
         try:
@@ -143,13 +143,13 @@ class SGBD:
             self._cursor.execute(query)
             resultado = self._cursor.fetchall()
             proximo_id = resultado[0][1]
-            self._desconectar()
             return proximo_id + 1
         except _possiveis_excecoes as e:
-            self._desconectar()
             self._log.registrar_erro(mensagem=f'Houve um erro ao recuperar o ID da tabela "{tabela}".\n\t'
                                               f'Descrição do erro: {e}\n')
             return -1
+        finally:
+            self._desconectar()
 
     def deletar_registro(self, tabela: str, condicao: str) -> bool:
         deletado = None
@@ -165,14 +165,14 @@ class SGBD:
             self._cursor.execute(query_deletar)
             self._conexao.commit()
 
-            self._desconectar()
             self._log.registrar_info(mensagem=f'Registro deletado. Tabela: {tabela} - {deletado}\n')
             return True
         except _possiveis_excecoes as e:
-            self._desconectar()
             self._log.registrar_erro(mensagem=f'Houve um erro ao tentar excluir da tabela "{tabela}",'
                                               f' o registro {deletado}.\n\tDescrição do erro: {e}\n')
             return False
+        finally:
+            self._desconectar()
 
     def editar_registros_produto(self, prod_id: int = None, prod_nome: str = None, prod_quantidade: int = None,
                                  prod_preco: float = None, prod_categoria: str = None, prod_estado: str = None,
@@ -193,14 +193,14 @@ class SGBD:
             self._cursor.execute(query_update, valores)
             self._conexao.commit()
 
-            self._desconectar()
             self._log.registrar_info(mensagem=f'Registro de produto editado.\n\tANTES: {antes}\n\tDEPOIS: {valores}\n')
             return True
         except _possiveis_excecoes as e:
-            self._desconectar()
             self._log.registrar_erro(mensagem=f'Erro ao editar registro de produto. PRODUTO: {prod_id} - {valores}\n\t'
                                               f'Descrição do erro: {e}\n')
             return False
+        finally:
+            self._desconectar()
 
 
 if __name__ == '__main__':
