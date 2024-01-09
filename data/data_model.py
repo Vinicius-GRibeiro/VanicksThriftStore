@@ -60,20 +60,34 @@ class SGBD:
             '''
 
             criar_venda = f'''
-                CREATE TABLE IF NOT EXISTS produto (
+                CREATE TABLE IF NOT EXISTS venda (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    nome TEXT,
-                    quantidade INTEGER,
-                    preco REAL,
-                    categoria TEXT,
-                    estado TEXT,
-                    descricao TEXT
+                    data_hora INTEGER,
+                    valor_total REAL
                 )
             '''
 
+            criar_itens_venda = f'''
+                            CREATE TABLE IF NOT EXISTS itens_venda (
+                                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                id_produto INTEGER,
+                                id_venda INTEGER,
+                                nome TEXT,
+                                qntd_anterior INTEGER,
+                                preco REAL,
+                                categoria TEXT,
+                                estado TEXT,
+                                descricao TEXT,
+                                FOREIGN KEY (id_venda) REFERENCES venda(id)
+                            )
+                        '''
+
+            self._cursor.execute(criar_venda)
+            self._cursor.execute(criar_itens_venda)
             self._cursor.execute(criar_categoria)
             self._cursor.execute(criar_estado)
             self._cursor.execute(criar_produto)
+
             self._conexao.commit()
 
             self._desconectar()
@@ -83,7 +97,11 @@ class SGBD:
 
     def inserir_registros(self, tipo: str, categoria_nome: str = None, estado_nome: str = None,
                           prod_nome: str = None, prod_quantidade: int = None, prod_preco: float = None,
-                          prod_categoria: str = None, prod_estado: str = None, prod_descricao: str = None) -> bool:
+                          prod_categoria: str = None, prod_estado: str = None, prod_descricao: str = None,
+                          venda_data_hora: int = None, venda_valor_total: float = None,item_venda_id: int = None,
+                          iv_id_venda: int = None, iv_nome: str = None, iv_qntd_anterior: int = None,
+                          iv_preco: float = None, iv_categoria: str = None, iv_estado: str = None,
+                          iv_descricao: str = None, iv_id_produto: int = None) -> bool:
         query = None
         valores = None
         try:
@@ -100,7 +118,12 @@ class SGBD:
                              f" VALUES (?, ?, ?, ?, ?, ?)")
                     valores = (prod_nome, prod_quantidade, prod_preco, prod_categoria, prod_estado, prod_descricao,)
                 case 'venda':
-                    pass
+                    query = f"INSERT INTO venda (data_hora, valor_total) VALUES (?, ?)"
+                    valores = (venda_data_hora, venda_valor_total,)
+                case 'venda_item':
+                    query = (f"INSERT INTO itens_venda (id_venda, id_produto, nome, qntd_anterior, preco, categoria, estado, descricao)"
+                             f" VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
+                    valores = (iv_id_venda, iv_id_produto, iv_nome, iv_qntd_anterior, iv_preco, iv_categoria, iv_estado, iv_descricao,)
 
             self._cursor.execute(query, valores)
             self._conexao.commit()
@@ -139,10 +162,10 @@ class SGBD:
     def recuperar_proximo_id(self, tabela: str):
         try:
             self._conectar()
-            query = f"SELECT * FROM sqlite_sequence WHERE name = '{tabela}'"
+
+            query = (f"SELECT seq FROM sqlite_sequence WHERE name = '{tabela}'")
             self._cursor.execute(query)
-            resultado = self._cursor.fetchall()
-            proximo_id = resultado[0][1]
+            proximo_id = self._cursor.fetchone()[0]
             return proximo_id + 1
         except _possiveis_excecoes as e:
             self._log.registrar_erro(mensagem=f'Houve um erro ao recuperar o ID da tabela "{tabela}".\n\t'

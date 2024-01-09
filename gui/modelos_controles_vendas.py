@@ -8,13 +8,16 @@ db = sgbd.SGBD()
 
 class BotaoParaOSubMenu:
     def __init__(self, texto: str, icone: str, rota: str, pagina: ft.Page, tabs: ft.Tabs,
-                 caixas_de_pesquisa=None):
+                 caixas_de_pesquisa=None, cod_data_hora=None, texto_cod=None, texto_timestamp=None):
         self._texto = texto
         self._icone = icone
         self._rota = rota
         self._pagina = pagina
         self._tabs = tabs
+        self._texto_cod = texto_cod
+        self._texto_timestamp = texto_timestamp
         self._caixas_de_pesquisa = caixas_de_pesquisa
+        self._cod_data_hora = cod_data_hora
         self.botao = self._retornar_botao_com_container(texto_do_botao=self._texto, icone_do_botao=self._icone,
                                                         rota=self._rota)
 
@@ -66,8 +69,8 @@ class BotaoParaOSubMenu:
         if self._rota == 'novo':
             self._tabs.selected_index = 0
             ctrl_vv.redefinir_view_vendas_novo(pagina=self._pagina, caixas_de_pesquisa=self._caixas_de_pesquisa,
-                                               tabela=None)
-            # TODO: AQUIIIII MALUCO
+                                               tabela=None, texto_cod_data_hora=self._cod_data_hora,
+                                               texto_cod=self._texto_cod, texto_timestamp=self._texto_timestamp, )
 
         elif self._rota == 'consultar':
             self._tabs.selected_index = 1
@@ -219,13 +222,14 @@ class TextoParaTitutlos:
 
 class CaixaDeTextoPadrao:
     def __init__(self, label: str, altura_caixa_e_container: int = 70, largura_caixa_container: int = 100,
-                 tamanho_do_texto: int = 15,
+                 tamanho_do_texto: int = 15, fino: bool = False,
                  pad_cima: int = 0, pad_baixo: int = 0, pad_direita: int = 0, pad_esquerda: int = 0,
                  alinhamento_do_texto_no_no_centro: bool = False):
         self._label = label
         self._altura_caixa_e_container = altura_caixa_e_container
         self._largura_caixa_container = largura_caixa_container
         self._tamanho_do_texto = tamanho_do_texto
+        self._fino = fino
         self._pad_cima = pad_cima
         self._pad_baixo = pad_baixo
         self._pad_direita = pad_direita
@@ -242,8 +246,8 @@ class CaixaDeTextoPadrao:
             border_radius=50,
             border_color=ft.colors.PINK_ACCENT_700,
             focused_border_color=ft.colors.PINK_500,
-            border_width=2,
-            focused_border_width=3,
+            border_width=1 if self._fino else 2,
+            focused_border_width=2 if self._fino else 3,
             text_align=ft.TextAlign.CENTER if self._alinhamento_do_texto_no_no_centro else None,
             label_style=ft.TextStyle(
                 weight=ft.FontWeight.BOLD,
@@ -274,13 +278,14 @@ class CaixaDeTextoPadrao:
 
 class CaixaDeEscolha:
     def __init__(self, label: str, altura_caixa_e_container: int = 70, largura_caixa_container: int = 100,
-                 tamanho_do_texto: int = 15,
+                 tamanho_do_texto: int = 15, fino: bool = False,
                  pad_cima: int = 0, pad_baixo: int = 0, pad_direita: int = 0, pad_esquerda: int = 0,
                  alinhamento_do_texto_no_no_centro: bool = False):
         self._label = label
         self._altura_caixa_e_container = altura_caixa_e_container
         self._largura_caixa_e_container = largura_caixa_container
         self._tamanho_do_texto = tamanho_do_texto
+        self._fino = fino
         self._pad_cima = pad_cima
         self._pad_baixo = pad_baixo
         self._pad_direita = pad_direita
@@ -295,8 +300,8 @@ class CaixaDeEscolha:
             border_radius=50,
             border_color=ft.colors.PINK_ACCENT_700,
             focused_border_color=ft.colors.PINK_500,
-            border_width=2,
-            focused_border_width=3,
+            border_width=1 if self._fino else 2,
+            focused_border_width=2 if self._fino else 3,
             label_style=ft.TextStyle(
                 weight=ft.FontWeight.BOLD,
                 color=ft.colors.PINK_900,
@@ -496,8 +501,8 @@ class TabelaProdutos:
 
 
 class BotaoIconePadrao:
-    def __init__(self, pagina: ft.Page, icone: str, tipo: str, tabela: TabelaProdutos,
-                 itens_pesquisa: [CaixaDeTextoPadrao, CaixaDeEscolha], tamanho_icone: int = 10,
+    def __init__(self, pagina: ft.Page, icone: str, tipo: str, tabela: TabelaProdutos = None,
+                 itens_pesquisa: [CaixaDeTextoPadrao, CaixaDeEscolha] = None, tamanho_icone: int = 10,
                  cor_do_icone: str = ft.colors.PINK_ACCENT_700):
         self._pagina = pagina
         self._icone = icone
@@ -581,8 +586,124 @@ class BotaoIconePadrao:
                 for reg in registros:
                     self._tabela.adicionar_linha_tabela_produtos(reg)
 
+            case 'finalizar_compra':
+                ...
+
         self._pagina.update()
 
+
+class BotaoTextoPadrao:
+    def __init__(self, pagina: ft.Page, texto: str, tipo: str, tabela: TabelaCarrinhoDeCompras = None,
+                 tabela_produtos: TabelaProdutos = None,
+                 itens_pesquisa: [CaixaDeTextoPadrao, CaixaDeEscolha] = None, tamanho_icone: int = 10,
+                 cor_do_icone: str = ft.colors.PINK_500, icone: str = None,
+                 tamanho_texto: int = 15, cor_do_texto: str = 'black', largura: int = 50, altura: int = 25,
+                 cod_venda=None, timestamp_venda=None, item_cod_data_hota=None, campo_valor_total=None):
+        self._pagina = pagina
+        self._texto = texto
+        self._icone = icone
+        self._tipo = tipo
+        self._tabela = tabela
+        self._tabela_produtos = tabela_produtos
+        self._itens_pesquisa = itens_pesquisa
+        self._tamanho_icone = tamanho_icone
+        self._cor_do_icone = cor_do_icone if icone is not None else None
+        self._tamanho_texto = tamanho_texto
+        self._cor_do_texto = cor_do_texto
+        self._altura = altura
+        self._largura = largura
+        self._item_cod_data_hota = item_cod_data_hota
+        self._cod_venda = cod_venda
+        self._timestamp_venda = timestamp_venda
+        self._campo_valor_total = campo_valor_total
+        self.item, self.item_container = self._item_botao_texto()
+
+    def _item_botao_texto(self):
+        conteudo = ft.Row(controls=[], alignment=ft.MainAxisAlignment.CENTER)
+
+        if self._icone is not None:
+            conteudo.controls.append(
+                ft.Icon(name=self._icone, size=self._tamanho_icone)
+            )
+
+        conteudo.controls.append(
+            ft.Text(value=self._texto, weight=ft.FontWeight.BOLD, size=self._tamanho_texto),
+        )
+
+        item = ft.TextButton(
+            content=conteudo,
+            width=self._largura,
+            height=self._altura,
+
+            style=ft.ButtonStyle(
+                color={
+                    ft.MaterialState.DEFAULT: ft.colors.WHITE,
+                    ft.MaterialState.HOVERED: self._cor_do_texto,
+                },
+                bgcolor={
+                    ft.MaterialState.DEFAULT: self._cor_do_texto,
+                    ft.MaterialState.HOVERED: ft.colors.WHITE,
+                }
+            ),
+            on_click=lambda e: self.ao_clicar_no_botao()
+        )
+
+        item_container = ft.Container(
+            content=item,
+            width=self._largura,
+            height=self._altura,
+            alignment=ft.alignment.center,
+            padding=ft.padding.only(top=10)
+        )
+
+        return item, item_container
+
+    def ao_clicar_no_botao(self):
+        match self._tipo:
+            case 'finalizar_compra':
+                if len(self._tabela.ids_produtos_utilizados) < 1:
+                    util.mostrar_notificacao(page=self._pagina, mensagem='Ops! O carrinho está vazio. '
+                                                                         'Adicione pelo menos um item para finalizar '
+                                                                         'a compra',
+                                             emoji='😢')
+                    return None
+
+                id_venda = self._cod_venda.value
+                timestamp_venda = self._timestamp_venda.value
+                produtos = []
+                val_total = 0
+
+                for cod_prod in self._tabela.ids_produtos_utilizados:
+                    produto = db.recuperar_registros(tabela='produto', condicao=f'id = {cod_prod}')
+                    produtos.append(produto[0])
+
+                exito = True
+
+                for produto in produtos:
+                    val_total += produto[3]
+                    exito = db.inserir_registros(tipo='venda_item', iv_id_venda=id_venda, iv_nome=produto[1],
+                                                 iv_qntd_anterior=produto[2],
+                                                 iv_estado=produto[5], iv_preco=produto[3],
+                                                 iv_categoria=produto[4], iv_descricao=produto[6],
+                                                 iv_id_produto=produto[0])
+
+                    exito = db.editar_registros_produto(prod_id=produto[0], prod_nome=produto[1],
+                                                        prod_quantidade=produto[2] - 1,
+                                                        prod_estado=produto[5], prod_preco=produto[3],
+                                                        prod_categoria=produto[4],
+                                                        prod_descricao=produto[6], condicao=f'id = {produto[0]}')
+
+                exito = db.inserir_registros(tipo='venda', venda_data_hora=timestamp_venda, venda_valor_total=val_total)
+
+                if exito:
+                    util.mostrar_notificacao(page=self._pagina, mensagem='Oba! Venda realizada', tipo='exito', emoji='🥳')
+                    ctrl_vv.redefinir_view_vendas_novo(pagina=self._pagina, tabela=self._tabela_produtos, tabela_carrinho_de_compras=self._tabela,
+                                                       caixas_de_pesquisa=self._itens_pesquisa, texto_cod_data_hora=self._item_cod_data_hota,
+                                                       texto_cod=self._cod_venda, texto_timestamp=self._timestamp_venda,
+                                                       valor_total=self._campo_valor_total)
+                    return True
+
+                util.mostrar_notificacao(page=self._pagina, mensagem='Houve um erro ao realizar venda', tipo='erro', emoji='💔')
 
 class TextoPadraoDoResumoDaCompra:
     def __init__(self, texto: str, tamanho: int = 10, bold: bool = False):
