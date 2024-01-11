@@ -63,7 +63,8 @@ class SGBD:
                 CREATE TABLE IF NOT EXISTS venda (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     data_hora INTEGER,
-                    valor_total REAL
+                    valor_total REAL,
+                    status TEXT DEFAULT 'realizado'
                 )
             '''
 

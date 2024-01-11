@@ -13,7 +13,7 @@ class MenuPrincipal:
 
         return ft.Container(ft.Row(controls=[
             ft.Container(
-                width=84, height=84, bgcolor=ft.colors.PINK_ACCENT_700,  # bluegrey900
+                width=84, height=84, bgcolor=ft.colors.PINK_ACCENT_700,
                 alignment=ft.alignment.center,
                 border_radius=16,
                 content=ft.Text(

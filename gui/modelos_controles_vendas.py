@@ -8,7 +8,8 @@ db = sgbd.SGBD()
 
 class BotaoParaOSubMenu:
     def __init__(self, texto: str, icone: str, rota: str, pagina: ft.Page, tabs: ft.Tabs,
-                 caixas_de_pesquisa=None, cod_data_hora=None, texto_cod=None, texto_timestamp=None):
+                 caixas_de_pesquisa=None, cod_data_hora=None, texto_cod=None, texto_timestamp=None,
+                 valor_total=None, tabela_vendas_consulta=None):
         self._texto = texto
         self._icone = icone
         self._rota = rota
@@ -18,6 +19,8 @@ class BotaoParaOSubMenu:
         self._texto_timestamp = texto_timestamp
         self._caixas_de_pesquisa = caixas_de_pesquisa
         self._cod_data_hora = cod_data_hora
+        self._valor_total = valor_total
+        self._tabela_vendas_consulta = tabela_vendas_consulta
         self.botao = self._retornar_botao_com_container(texto_do_botao=self._texto, icone_do_botao=self._icone,
                                                         rota=self._rota)
 
@@ -70,11 +73,12 @@ class BotaoParaOSubMenu:
             self._tabs.selected_index = 0
             ctrl_vv.redefinir_view_vendas_novo(pagina=self._pagina, caixas_de_pesquisa=self._caixas_de_pesquisa,
                                                tabela=None, texto_cod_data_hora=self._cod_data_hora,
-                                               texto_cod=self._texto_cod, texto_timestamp=self._texto_timestamp, )
+                                               texto_cod=self._texto_cod, texto_timestamp=self._texto_timestamp,
+                                               valor_total=self._valor_total)
 
         elif self._rota == 'consultar':
             self._tabs.selected_index = 1
-            # TODO: FUNÇÃO PARA ATUALIZAR A VIEW - CONSULTAR
+            ctrl_vv.redefinir_view_vendas_consultar(pagina=self._pagina, tabela_=self._tabela_vendas_consulta)
 
         self._pagina.update()
 
@@ -224,7 +228,7 @@ class CaixaDeTextoPadrao:
     def __init__(self, label: str, altura_caixa_e_container: int = 70, largura_caixa_container: int = 100,
                  tamanho_do_texto: int = 15, fino: bool = False,
                  pad_cima: int = 0, pad_baixo: int = 0, pad_direita: int = 0, pad_esquerda: int = 0,
-                 alinhamento_do_texto_no_no_centro: bool = False):
+                 alinhamento_do_texto_no_no_centro: bool = False, tipo_teclado: ft.KeyboardType=None):
         self._label = label
         self._altura_caixa_e_container = altura_caixa_e_container
         self._largura_caixa_container = largura_caixa_container
@@ -234,6 +238,7 @@ class CaixaDeTextoPadrao:
         self._pad_baixo = pad_baixo
         self._pad_direita = pad_direita
         self._pad_esquerda = pad_esquerda
+        self._tipo_teclado = tipo_teclado
         self._alinhamento_do_texto_no_no_centro = alinhamento_do_texto_no_no_centro
 
         self.item, self.item_container = self._item_caixa()
@@ -259,6 +264,9 @@ class CaixaDeTextoPadrao:
                 weight=ft.FontWeight.BOLD,
             ),
         )
+
+        if self._tipo_teclado is not None:
+            item.keyboard_type = self._tipo_teclado
 
         item_container = ft.Container(
             padding=ft.padding.only(
@@ -340,15 +348,14 @@ class TabelaCarrinhoDeCompras:
 
     def _item_tabela_produtos(self) -> ft.DataTable:
         tabela = ft.DataTable(
-            height=self.altura,
             heading_text_style=ft.TextStyle(size=10, weight=ft.FontWeight.BOLD),
             data_text_style=ft.TextStyle(size=10),
             divider_thickness=1,
             horizontal_lines=ft.BorderSide(width=5, color=ft.colors.YELLOW_ACCENT_100),
             column_spacing=70,
-            heading_row_height=35,
-            data_row_max_height=35,
-            data_row_min_height=35,
+            heading_row_height=45,
+            data_row_max_height=45,
+            data_row_min_height=45,
             columns=[
                 self.coluna_tabela_produtos(titulo_coluna='Cód.'),
                 self.coluna_tabela_produtos(titulo_coluna='Prod.'),
@@ -393,7 +400,6 @@ class TabelaCarrinhoDeCompras:
             indice += 1
 
         self.ids_produtos_utilizados.remove(dados[0])
-        print(self.ids_produtos_utilizados)
         self.linhas_tabela.pop(indice)
 
         self._valor_total.value = round(float(self._valor_total.value) - dados[-1], 2)
@@ -401,7 +407,7 @@ class TabelaCarrinhoDeCompras:
 
 
 class TabelaProdutos:
-    def __init__(self, pagina: ft.Page, largura_tabela: int = 500, altura_cabecalho: int = 50,
+    def __init__(self, pagina: ft.Page, largura_tabela: int = 500, altura_cabecalho: int = 45,
                  altura_caixa_e_container: int = 70, largura_caixa_container: int = 100,
                  pad_cima: int = 0, pad_baixo: int = 0, pad_direita: int = 0, pad_esquerda: int = 0,
                  carrinho_compras: TabelaCarrinhoDeCompras = None, valor_total: ft.TextField = None):
@@ -422,7 +428,6 @@ class TabelaProdutos:
     def _item_tabela_produtos(self):
         item = ft.DataTable(
             width=self._largura_tabela,
-            height=self._altura_caixa_e_container,
             heading_row_height=self._altura_cabecalho,
             data_row_min_height=self._altura_cabecalho,
             data_row_max_height=self._altura_cabecalho,
@@ -455,7 +460,6 @@ class TabelaProdutos:
                 left=self._pad_esquerda,
                 right=self._pad_direita
             ),
-            height=self._altura_caixa_e_container,
             width=self._largura_caixa_e_container,
             content=item,
             alignment=ft.alignment.top_center,
@@ -586,9 +590,6 @@ class BotaoIconePadrao:
                 for reg in registros:
                     self._tabela.adicionar_linha_tabela_produtos(reg)
 
-            case 'finalizar_compra':
-                ...
-
         self._pagina.update()
 
 
@@ -693,7 +694,8 @@ class BotaoTextoPadrao:
                                                         prod_categoria=produto[4],
                                                         prod_descricao=produto[6], condicao=f'id = {produto[0]}')
 
-                exito = db.inserir_registros(tipo='venda', venda_data_hora=timestamp_venda, venda_valor_total=val_total)
+                exito = db.inserir_registros(tipo='venda', venda_data_hora=timestamp_venda,
+                                             venda_valor_total=round(val_total, 2))
 
                 if exito:
                     util.mostrar_notificacao(page=self._pagina, mensagem='Oba! Venda realizada', tipo='exito', emoji='🥳')

@@ -51,3 +51,4 @@ def verificar_se_existem_campos_vazios(page: ft.Page, controles: list) -> bool:
 
     page.update()
     return nao_esta_vazio
+

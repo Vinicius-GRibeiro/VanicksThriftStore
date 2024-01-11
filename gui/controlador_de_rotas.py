@@ -21,7 +21,6 @@ def controlador_de_rotas(page: ft.Page, lista_de_views: list):
         elif page.route == '/vendas':
             page.views.append(vendas.view_())
             ctrl_vv.redefinir_view_vendas_novo(pagina=page, view=vendas)
-            ctrl_vv.redefinir_view_vendas_consultar(pagina=page, view=vendas)
         elif page.route == '/configuracoes':
             page.views.append(configuracoes.view_())
 

@@ -2,6 +2,7 @@ import flet as ft
 import data.data_model
 import gui.fabrica_de_views as fv
 import gui.modelos_controles_vendas as mcv
+import gui.modelos_controles_vendas_consultar as mcvc
 
 db = data.data_model.SGBD()
 
@@ -44,8 +45,8 @@ class ViewVendas:
 
         self.tabela_carrinho_de_compras = mcv.TabelaCarrinhoDeCompras(pagina=self.pagina, altura=350,
                                                                       valor_total=self.valor_total)
-
-        self.tabela_produtos = mcv.TabelaProdutos(pagina=self.pagina, largura_tabela=400, altura_cabecalho=40,
+        self.lista_de_ids_de_produtos_no_carrinho = ft.Text(value='')
+        self.tabela_produtos = mcv.TabelaProdutos(pagina=self.pagina, largura_tabela=400,
                                                   largura_caixa_container=400, altura_caixa_e_container=350,
                                                   pad_esquerda=20, carrinho_compras=self.tabela_carrinho_de_compras,
                                                   valor_total=self.valor_total)
@@ -80,6 +81,15 @@ class ViewVendas:
                                                            campo_valor_total=self.valor_total
                                                            )
 
+        self.consulta_caixa_data_inicial = mcvc.CaixaDeTextoPadraoCONSULTA(label='Data inicial', icone_prefixo=ft.icons.CALENDAR_TODAY_ROUNDED)
+        self.consulta_caixa_data_final = mcvc.CaixaDeTextoPadraoCONSULTA(label='Data final', icone_prefixo=ft.icons.CALENDAR_TODAY_ROUNDED)
+        self.consulta_caixa_valor_inicial = mcvc.CaixaDeTextoPadraoCONSULTA(label='Valor inicial', icone_prefixo=ft.icons.ATTACH_MONEY_ROUNDED)
+        self.consulta_caixa_valor_final = mcvc.CaixaDeTextoPadraoCONSULTA(label='Valor final', icone_prefixo=ft.icons.ATTACH_MONEY_ROUNDED)
+        self.consulta_caixa_escolha_produto_categoria = mcvc.CaixaDeEscolhaPadraoCONSULTA(label='Categoria', icone_prefixo=ft.icons.CATEGORY_ROUNDED)
+        self.consulta_caixa_escolha_produto_estado = mcvc.CaixaDeEscolhaPadraoCONSULTA(label='Estado', icone_prefixo=ft.icons.BENTO_ROUNDED)
+        self.consulta_caixa_escolha_produto_produto = mcvc.CaixaDeEscolhaPadraoCONSULTA(label='Produto', icone_prefixo=ft.icons.INVENTORY_2_ROUNDED, largura=310)
+        self.consulta_tabela_vendas = mcvc.TabelaProdutosConsultar(pagina=self.pagina, altura_cabecalho=50)
+
         # Atributos daqui para baixo, devem ser os últimos
         self.tabs_cru = mcv.Tabs_(pagina=self.pagina, conteudo_tabs_1_=self.conteudo_tabs_1(),
                                   conteudo_tabs_2_=self.conteudo_tabs_2())
@@ -87,11 +97,13 @@ class ViewVendas:
                                                         rota='novo', pagina=self.pagina, tabs=self.tabs_cru.tabs,
                                                         caixas_de_pesquisa=self.caixas_de_pesquisa,
                                                         cod_data_hora=self.texto_cod_data_hora,
-                                                        texto_cod=self.cod_venda, texto_timestamp=self.timestamp)
+                                                        texto_cod=self.cod_venda, texto_timestamp=self.timestamp,
+                                                        valor_total=self.valor_total)
         self.botao_submenu_consultar = mcv.BotaoParaOSubMenu(texto='Consultar', icone=ft.icons.RECEIPT_ROUNDED,
                                                              rota='consultar', pagina=self.pagina,
                                                              tabs=self.tabs_cru.tabs,
-                                                             caixas_de_pesquisa=self.caixas_de_pesquisa)
+                                                             caixas_de_pesquisa=self.caixas_de_pesquisa,
+                                                             tabela_vendas_consulta=self.consulta_tabela_vendas)
 
     def view_(self):
         view = fv.ConstruirView(pagina=self.pagina, rota='/vendas', controles_submenu=self.conteudo_submenu(),
@@ -150,16 +162,21 @@ class ViewVendas:
                                     ft.Column(  # Coluna dos produtos e pesquisas
                                         controls=[
                                             #  1ª linha - Início da tabela de pesquisa de produtos
-                                            ft.Row(
-                                                width=400,
+                                            ft.Column(
                                                 height=300,
                                                 controls=[
-                                                    ft.Column(
+                                                    ft.Row(
                                                         width=400,
-                                                        height=350,
-                                                        scroll=ft.ScrollMode.ADAPTIVE,
+                                                        height=300,
                                                         controls=[
-                                                            self.tabela_produtos.item_container
+                                                            ft.Column(
+                                                                width=400,
+                                                                height=300,
+                                                                scroll=ft.ScrollMode.ADAPTIVE,
+                                                                controls=[
+                                                                    self.tabela_produtos.item_container
+                                                                ]
+                                                            )
                                                         ]
                                                     )
                                                 ]
@@ -248,16 +265,45 @@ class ViewVendas:
                         ]
                     ),
 
-
                 ]
             )
         )
 
     def conteudo_tabs_2(self) -> ft.Container:
-        return ft.Container(
-            content=ft.Row(
-                controls=[
-                    ft.Text('abba 2')
-                ]
-            )
-        )
+        titulo_da_tab_atual = mcv.TextoParaTitutlos(label='Consultar vendas', pad_cima=5, pad_baixo=5,
+                                                    largura_container=850).item_container
+        titulo_da_tab_atual.border = ft.Border(bottom=ft.BorderSide(1, ft.colors.PINK_ACCENT_700))
+
+        return ft.Container(alignment=ft.alignment.top_right, content=ft.Column(spacing=25, controls=[
+            ft.Row(controls=[ft.Container(content=titulo_da_tab_atual, height=50)]),  # Linha de titulo
+
+            ft.Row(alignment=ft.MainAxisAlignment.START, controls=[  # Linha do conteúdo principal, que possui as duas colunas
+
+                ft.Container(width=320, content=ft.Column(controls=[  # Coluna dos filtros de pesquisa
+                    mcvc.TextoPadrao(texto='Por período', container_largura=150, container_altura=25,
+                                     peso=True).item_container,
+                    ft.Row(controls=[self.consulta_caixa_data_inicial.item_container,
+                                     self.consulta_caixa_data_final.item_container]),
+
+                    ft.Divider(thickness=10, opacity=0),
+
+                    mcvc.TextoPadrao(texto='Por valor total R$', container_largura=150, container_altura=25,
+                                     peso=True).item_container,
+                    ft.Row(controls=[self.consulta_caixa_valor_inicial.item_container,
+                                     self.consulta_caixa_valor_final.item_container]),
+
+                    ft.Divider(thickness=10, opacity=0),
+
+                    mcvc.TextoPadrao(texto='Pelo produto', container_largura=150, container_altura=25,
+                                     peso=True).item_container,
+                    ft.Row(controls=[self.consulta_caixa_escolha_produto_categoria.item_container,
+                                     self.consulta_caixa_escolha_produto_estado.item_container]),
+                    self.consulta_caixa_escolha_produto_produto.item_container
+                ])),
+
+                ft.Container(width=480, height=450, content=ft.Column(scroll=ft.ScrollMode.ADAPTIVE, height=450, controls=[  # Coluna da lista de vendas
+                    self.consulta_tabela_vendas.item_container
+                ], alignment=ft.MainAxisAlignment.START)),
+
+            ])
+        ]))
