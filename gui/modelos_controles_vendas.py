@@ -9,7 +9,8 @@ db = sgbd.SGBD()
 class BotaoParaOSubMenu:
     def __init__(self, texto: str, icone: str, rota: str, pagina: ft.Page, tabs: ft.Tabs,
                  caixas_de_pesquisa=None, cod_data_hora=None, texto_cod=None, texto_timestamp=None,
-                 valor_total=None, tabela_vendas_consulta=None):
+                 valor_total=None, tabela_vendas_consulta=None, filtros_texto=None, filtros_escolha=None,
+                 filtro_cancelados=None):
         self._texto = texto
         self._icone = icone
         self._rota = rota
@@ -21,6 +22,9 @@ class BotaoParaOSubMenu:
         self._cod_data_hora = cod_data_hora
         self._valor_total = valor_total
         self._tabela_vendas_consulta = tabela_vendas_consulta
+        self._filtros_texto = filtros_texto
+        self._filtros_escolha = filtros_escolha
+        self._filtro_cancelados = filtro_cancelados
         self.botao = self._retornar_botao_com_container(texto_do_botao=self._texto, icone_do_botao=self._icone,
                                                         rota=self._rota)
 
@@ -78,7 +82,9 @@ class BotaoParaOSubMenu:
 
         elif self._rota == 'consultar':
             self._tabs.selected_index = 1
-            ctrl_vv.redefinir_view_vendas_consultar(pagina=self._pagina, tabela_=self._tabela_vendas_consulta)
+            ctrl_vv.redefinir_view_vendas_consultar(pagina=self._pagina, tabela_=self._tabela_vendas_consulta,
+                                                    filtros_caixa_de_texto=self._filtros_texto,
+                                                    filtro_cancelados=self._filtro_cancelados)
 
         self._pagina.update()
 

@@ -80,16 +80,55 @@ class ViewVendas:
                                                            item_cod_data_hota=self.texto_cod_data_hora,
                                                            campo_valor_total=self.valor_total
                                                            )
+        _filtro_data = ft.InputFilter(regex_string='^[0-9/]+$', allow=True, replacement_string="")
+        _filtro_monetario = ft.InputFilter(regex_string='^[0-9.]+$', allow=True)
 
-        self.consulta_caixa_data_inicial = mcvc.CaixaDeTextoPadraoCONSULTA(label='Data inicial', icone_prefixo=ft.icons.CALENDAR_TODAY_ROUNDED)
-        self.consulta_caixa_data_final = mcvc.CaixaDeTextoPadraoCONSULTA(label='Data final', icone_prefixo=ft.icons.CALENDAR_TODAY_ROUNDED)
-        self.consulta_caixa_valor_inicial = mcvc.CaixaDeTextoPadraoCONSULTA(label='Valor inicial', icone_prefixo=ft.icons.ATTACH_MONEY_ROUNDED)
-        self.consulta_caixa_valor_final = mcvc.CaixaDeTextoPadraoCONSULTA(label='Valor final', icone_prefixo=ft.icons.ATTACH_MONEY_ROUNDED)
-        self.consulta_caixa_escolha_produto_categoria = mcvc.CaixaDeEscolhaPadraoCONSULTA(label='Categoria', icone_prefixo=ft.icons.CATEGORY_ROUNDED)
-        self.consulta_caixa_escolha_produto_estado = mcvc.CaixaDeEscolhaPadraoCONSULTA(label='Estado', icone_prefixo=ft.icons.BENTO_ROUNDED)
-        self.consulta_caixa_escolha_produto_produto = mcvc.CaixaDeEscolhaPadraoCONSULTA(label='Produto', icone_prefixo=ft.icons.INVENTORY_2_ROUNDED, largura=310)
-        self.consulta_tabela_vendas = mcvc.TabelaProdutosConsultar(pagina=self.pagina, altura_cabecalho=50)
+        self.consulta_switch_cancelados = ft.Switch(label='cancelados', value=False)
+        self.consulta_switch_cancelados.active_color = ft.colors.PINK_ACCENT_700
 
+        self.consulta_caixa_data_inicial = mcvc.CaixaDeTextoPadraoCONSULTA(label='Data inicial',
+                                                                           icone_prefixo=ft.icons.CALENDAR_TODAY_ROUNDED)
+        self.consulta_caixa_data_inicial.item.input_filter = _filtro_data
+
+        self.consulta_caixa_data_final = mcvc.CaixaDeTextoPadraoCONSULTA(label='Data final',
+                                                                         icone_prefixo=ft.icons.CALENDAR_TODAY_ROUNDED)
+        self.consulta_caixa_data_final.item.input_filter = _filtro_data
+
+        self.consulta_caixa_valor_inicial = mcvc.CaixaDeTextoPadraoCONSULTA(label='Valor inicial',
+                                                                            icone_prefixo=ft.icons.ATTACH_MONEY_ROUNDED)
+        self.consulta_caixa_valor_inicial.item.input_filter = _filtro_monetario
+
+        self.consulta_caixa_valor_final = mcvc.CaixaDeTextoPadraoCONSULTA(label='Valor final',
+                                                                          icone_prefixo=ft.icons.ATTACH_MONEY_ROUNDED)
+        self.consulta_caixa_valor_final.item.input_filter = _filtro_monetario
+
+        self.filtros_caixa_de_texto = [
+            self.consulta_caixa_data_inicial,
+            self.consulta_caixa_data_final,
+            self.consulta_caixa_valor_inicial,
+            self.consulta_caixa_valor_final
+        ]
+
+        self.consulta_tabela_vendas = mcvc.TabelaProdutosConsultar(pagina=self.pagina, altura_cabecalho=50,
+                                                                   filtro_cancelados=self.consulta_switch_cancelados,
+                                                                   filtros_texto=self.filtros_caixa_de_texto)
+
+        self.consulta_botao_consultar = mcvc.BotaoPadraConsulta(pagina=self.pagina, tipo='consultar',
+                                                                icone=ft.icons.SEARCH_ROUNDED,
+                                                                cor_padrao=ft.colors.PINK_ACCENT_700,
+                                                                tamanho_icone=30,
+                                                                filtros_texto=self.filtros_caixa_de_texto,
+                                                                filtro_cancelados=self.consulta_switch_cancelados,
+                                                                tabela=self.consulta_tabela_vendas)
+
+        self.consulta_botao_resetar_filtro = mcvc.BotaoPadraConsulta(pagina=self.pagina, tipo='resetar',
+                                                                     icone=ft.icons.FIND_REPLACE_ROUNDED,
+                                                                     cor_padrao=ft.colors.INDIGO_700,
+                                                                     tamanho_icone=30,
+                                                                     filtros_texto=self.filtros_caixa_de_texto,
+                                                                     filtro_cancelados=self.consulta_switch_cancelados,
+                                                                     tabela=self.consulta_tabela_vendas
+                                                                     )
         # Atributos daqui para baixo, devem ser os últimos
         self.tabs_cru = mcv.Tabs_(pagina=self.pagina, conteudo_tabs_1_=self.conteudo_tabs_1(),
                                   conteudo_tabs_2_=self.conteudo_tabs_2())
@@ -103,7 +142,9 @@ class ViewVendas:
                                                              rota='consultar', pagina=self.pagina,
                                                              tabs=self.tabs_cru.tabs,
                                                              caixas_de_pesquisa=self.caixas_de_pesquisa,
-                                                             tabela_vendas_consulta=self.consulta_tabela_vendas)
+                                                             tabela_vendas_consulta=self.consulta_tabela_vendas,
+                                                             filtros_texto=self.filtros_caixa_de_texto,
+                                                             filtro_cancelados=self.consulta_switch_cancelados)
 
     def view_(self):
         view = fv.ConstruirView(pagina=self.pagina, rota='/vendas', controles_submenu=self.conteudo_submenu(),
@@ -277,33 +318,44 @@ class ViewVendas:
         return ft.Container(alignment=ft.alignment.top_right, content=ft.Column(spacing=25, controls=[
             ft.Row(controls=[ft.Container(content=titulo_da_tab_atual, height=50)]),  # Linha de titulo
 
-            ft.Row(alignment=ft.MainAxisAlignment.START, controls=[  # Linha do conteúdo principal, que possui as duas colunas
+            ft.Row(alignment=ft.MainAxisAlignment.START,
+                   controls=[  # Linha do conteúdo principal, que possui as duas colunas
 
-                ft.Container(width=320, content=ft.Column(controls=[  # Coluna dos filtros de pesquisa
-                    mcvc.TextoPadrao(texto='Por período', container_largura=150, container_altura=25,
-                                     peso=True).item_container,
-                    ft.Row(controls=[self.consulta_caixa_data_inicial.item_container,
-                                     self.consulta_caixa_data_final.item_container]),
+                       ft.Container(width=320, content=ft.Column(controls=[  # Coluna dos filtros de pesquisa
 
-                    ft.Divider(thickness=10, opacity=0),
+                           ft.Row(controls=[mcvc.TextoPadrao(texto='Por período', container_largura=150,
+                                                             container_altura=25,
+                                                             peso=True).item_container,
+                                            self.consulta_switch_cancelados
+                                            ]),
 
-                    mcvc.TextoPadrao(texto='Por valor total R$', container_largura=150, container_altura=25,
-                                     peso=True).item_container,
-                    ft.Row(controls=[self.consulta_caixa_valor_inicial.item_container,
-                                     self.consulta_caixa_valor_final.item_container]),
+                           ft.Row(controls=[self.consulta_caixa_data_inicial.item_container,
+                                            self.consulta_caixa_data_final.item_container]),
 
-                    ft.Divider(thickness=10, opacity=0),
+                           ft.Divider(thickness=10, opacity=0),
 
-                    mcvc.TextoPadrao(texto='Pelo produto', container_largura=150, container_altura=25,
-                                     peso=True).item_container,
-                    ft.Row(controls=[self.consulta_caixa_escolha_produto_categoria.item_container,
-                                     self.consulta_caixa_escolha_produto_estado.item_container]),
-                    self.consulta_caixa_escolha_produto_produto.item_container
-                ])),
+                           mcvc.TextoPadrao(texto='Por valor total R$', container_largura=150, container_altura=25,
+                                            peso=True).item_container,
+                           ft.Row(controls=[self.consulta_caixa_valor_inicial.item_container,
+                                            self.consulta_caixa_valor_final.item_container]),
 
-                ft.Container(width=480, height=450, content=ft.Column(scroll=ft.ScrollMode.ADAPTIVE, height=450, controls=[  # Coluna da lista de vendas
-                    self.consulta_tabela_vendas.item_container
-                ], alignment=ft.MainAxisAlignment.START)),
+                           ft.Divider(thickness=10, opacity=0),
 
-            ])
+                           ft.Row(
+                               alignment=ft.MainAxisAlignment.END,
+                               controls=[
+                                   self.consulta_botao_resetar_filtro.item,
+                                   self.consulta_botao_consultar.item,
+                               ]
+                           ),
+
+                           ft.Container(height=100)
+                       ])),
+
+                       ft.Container(width=480, height=450, content=ft.Column(scroll=ft.ScrollMode.ADAPTIVE, height=450,
+                                                                             controls=[  # Coluna da lista de vendas
+                                                                                 self.consulta_tabela_vendas.item_container
+                                                                             ], alignment=ft.MainAxisAlignment.START)),
+
+                   ])
         ]))

@@ -2,7 +2,6 @@ import flet as ft
 import data.data_model as sgdb
 import gui.view_vendas as vv
 from datetime import datetime
-from pprint import pprint
 
 db = sgdb.SGBD()
 
@@ -49,15 +48,17 @@ def redefinir_view_vendas_novo(pagina: ft.Page, tabela=None, caixas_de_pesquisa=
         pagina.update()
 
 
-def redefinir_view_vendas_consultar(pagina: ft.Page, view: vv.ViewVendas | None = None, tabela_=None):
+def redefinir_view_vendas_consultar(pagina: ft.Page, view: vv.ViewVendas | None = None, tabela_=None,
+                                    filtros_caixa_de_texto=None,
+                                    filtro_cancelados=None):
     tabela = view.consulta_tabela_vendas if view is not None else tabela_
+    filtros_texto = view.filtros_caixa_de_texto if view is not None else filtros_caixa_de_texto
+    filtro_cancelados = view.consulta_switch_cancelados if view is not None else filtro_cancelados
 
     if tabela is not None:
         tabela._linhas_tabela.clear()
-
         todas_vendas = db.recuperar_registros(tabela='venda')
-
-        #Limpar tabela vendas e adicionar TODAS as vendas
+        # Limpar tabela vendas e adicionar TODAS as vendas
         for venda in todas_vendas:
             id_venda = venda[0]
             timestamp_venda = venda[1]
@@ -70,8 +71,18 @@ def redefinir_view_vendas_consultar(pagina: ft.Page, view: vv.ViewVendas | None 
                                                        colunas='id_produto, nome, preco, categoria, estado, descricao')
             produto_em_string = ''
             for prod in produtos_da_venda:
-                produto_em_string += f"\n{prod[0]} {prod[1]} | R${prod[2]} | {prod[3]} | {prod[4]} | {prod[5]}"
+                produto_em_string += f"{prod[1]}, "
 
             dados = (id_venda, data, total_venda, status_venda, produto_em_string, produtos_da_venda)
             tabela.adicionar_linha_tabela_produtos(dados)
 
+    for filtro in filtros_texto:
+        filtro.item.value = ''
+
+    categorias = db.recuperar_registros(tabela='categoria', colunas='nome')
+    estados = db.recuperar_registros(tabela='estado', colunas='nome')
+
+    produtos = db.recuperar_registros(tabela='produto', colunas='nome')
+
+    filtro_cancelados.value = False
+    pagina.update()

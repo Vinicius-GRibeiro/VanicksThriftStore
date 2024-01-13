@@ -116,7 +116,7 @@ class MenuPrincipal:
                                              rota='/configuracoes'),
                     ft.Divider(height=10, color='transparent'),
                     ft.Divider(height=30, color=ft.colors.PINK_ACCENT_700),
-                    self.botao_com_container(icone_do_botao=ft.icons.LOGOUT_ROUNDED, texto_do_botao='Sair')
+                    self.botao_com_container(icone_do_botao=ft.icons.LOGOUT_ROUNDED, texto_do_botao='Sair', rota='/')
                 ])
             )
         )

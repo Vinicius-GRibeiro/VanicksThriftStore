@@ -226,6 +226,29 @@ class SGBD:
         finally:
             self._desconectar()
 
+    def marcar_venda_como_cancelada(self, id_venda: int, produtos: list[tuple]):
+        try:
+            query_venda = f"UPDATE venda SET status = 'cancelado' WHERE id = {id_venda}"
+            self._conectar()
+            self._cursor.execute(query_venda)
+
+            for produto in produtos:
+                query_produto = f"UPDATE produto SET quantidade = quantidade + 1 WHERE id = {produto[0]}"
+                self._cursor.execute(query_produto)
+
+            self._conexao.commit()
+            self._log.registrar_info(mensagem=f'Venda com o código {id_venda} CANCELADA.')
+
+            return True
+        except _possiveis_excecoes as e:
+            self._log.registrar_erro(mensagem=f'Erro ao cancelar venda {id_venda}\n\t'
+                                              f'Descrição do erro: {e}\n')
+            return False
+        finally:
+            self._desconectar()
+
+
+
 
 if __name__ == '__main__':
     db = SGBD()
