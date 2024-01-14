@@ -4,17 +4,21 @@ import controladores.controlador_view_vendas as ctrl_vv
 
 
 def controlador_de_rotas(page: ft.Page, lista_de_views: list):
-
     def mudar_rota(route):  # type: ignore
         inicio = lista_de_views[0]
         produtos = lista_de_views[1]
         vendas = lista_de_views[2]
         configuracoes = lista_de_views[3]
+        login = lista_de_views[-1]
 
         page.views.clear()
-        page.views.append(inicio.view_())
+        page.views.append(login.view_())
 
-        if page.route == '/produtos':
+        if page.route == '/login':
+            page.views.append(login.view_())
+        elif page.route == '/inicio':
+            page.views.append(inicio.view_())
+        elif page.route == '/produtos':
             page.views.append(produtos.view_())
             ctrl_vp.atualizar_view_produtos_adicionar(view=produtos, pagina=page)
             ctrl_vp.atualizar_view_produtos_consultar(view=produtos, pagina=page)

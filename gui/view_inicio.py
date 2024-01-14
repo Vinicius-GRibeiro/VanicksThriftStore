@@ -11,7 +11,7 @@ class ViewInicio:
 
     def view_(self):
         return ft.View(
-            route='/',
+            route='/inicio',
             bgcolor=ft.colors.BLACK54,
             controls=[
                 ft.Container(

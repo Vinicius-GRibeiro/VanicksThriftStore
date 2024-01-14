@@ -1,6 +1,8 @@
 import sqlite3
 from pathlib import Path
 from data.registros import Logger
+from datetime import datetime
+import os
 
 _possiveis_excecoes = (sqlite3.DataError, sqlite3.OperationalError, sqlite3.IntegrityError, sqlite3.ProgrammingError,
                        sqlite3.InterfaceError, sqlite3.InternalError, sqlite3.DatabaseError, sqlite3.Error)
@@ -8,7 +10,12 @@ _possiveis_excecoes = (sqlite3.DataError, sqlite3.OperationalError, sqlite3.Inte
 
 class SGBD:
     def __init__(self):
-        self._nome_banco = f"{Path.home()}/OneDrive/Área de Trabalho/vanick_bdd.db"
+        caminho_documentos = Path.home() / "Documents"
+        sistema_vanick_path = caminho_documentos / "Sistema Vanick"
+        sistema_vanick_path.mkdir(parents=True, exist_ok=True)
+        caminho_db = sistema_vanick_path / "vanick.db"
+
+        self._nome_banco = caminho_db
         self._conexao = None
         self._cursor = None
         self._log = Logger()
@@ -29,7 +36,7 @@ class SGBD:
             self._log.registrar_erro(mensagem=f'Erro ao DESCONECTAR do banco "{self._nome_banco}".\n\t'
                                               f'Descrição do erro: {e}\n')
 
-    def _criar_tabelas(self):
+    def _estruturar_banco(self):
         try:
             self._conectar()
 
@@ -37,18 +44,18 @@ class SGBD:
                                 CREATE TABLE IF NOT EXISTS categoria (
                                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                                     nome TEXT
-                                )
+                                );
                                 '''
 
             criar_estado = f'''
                             CREATE TABLE IF NOT EXISTS estado (
                                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                                 nome TEXT
-                            )
+                            );
                             '''
 
             criar_produto = f'''
-                CREATE TABLE IF NOT EXISTS venda (
+                CREATE TABLE IF NOT EXISTS produto (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     nome TEXT,
                     quantidade INTEGER,
@@ -56,7 +63,7 @@ class SGBD:
                     categoria TEXT,
                     estado TEXT,
                     descricao TEXT
-                )
+                );
             '''
 
             criar_venda = f'''
@@ -65,7 +72,7 @@ class SGBD:
                     data_hora INTEGER,
                     valor_total REAL,
                     status TEXT DEFAULT 'realizado'
-                )
+                );
             '''
 
             criar_itens_venda = f'''
@@ -80,9 +87,20 @@ class SGBD:
                                 estado TEXT,
                                 descricao TEXT,
                                 FOREIGN KEY (id_venda) REFERENCES venda(id)
-                            )
+                            );
                         '''
 
+            criar_controle_de_versao = f'''
+                CREATE TABLE IF NOT EXISTS controle_versao (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    versaoSoftware TEXT,
+                    versaoBancoDeDados TEXT,
+                    dataRelease DATE,
+                    changeLog TEXT
+                );
+            '''
+
+            self._cursor.execute(criar_controle_de_versao)
             self._cursor.execute(criar_venda)
             self._cursor.execute(criar_itens_venda)
             self._cursor.execute(criar_categoria)
@@ -94,6 +112,36 @@ class SGBD:
             self._desconectar()
         except _possiveis_excecoes as e:
             print(e)
+            self._desconectar()
+
+    def _inicializar_tabelas(self):
+        try:
+            self._conectar()
+            tabelas = ('categoria', 'estado', 'venda', 'itens_venda', 'produto', 'controle_versao')
+
+            for tabela in tabelas:
+                if tabela != 'controle_versao':
+                    query = f'INSERT INTO {tabela} DEFAULT VALUES'
+                    self._cursor.execute(query)
+            self._conexao.commit()
+
+            for tabela in tabelas:
+                if tabela != 'controle_versao':
+                    query = f'DELETE FROM {tabela} WHERE id = (SELECT MIN(id) FROM {tabela});'
+                    self._cursor.execute(query)
+
+            query = f"INSERT INTO controle_versao (versaoSoftware, versaoBancoDeDados, dataRelease, changeLog) VALUES (?, ?, ?, ?)"
+
+            data = datetime.now().strftime("%d/%m/%Y")
+            valores = ('1.0.0', '1.0.1', data, 'Primeira execução',)
+            self._cursor.execute(query, valores)
+
+            self._conexao.commit()
+
+        except _possiveis_excecoes as e:
+            self._log.registrar_erro(mensagem=f'Houve um erro ao inicializar as tabelas".\n\t'
+                                              f'Descrição do erro: {e}\n')
+        finally:
             self._desconectar()
 
     def inserir_registros(self, tipo: str, categoria_nome: str = None, estado_nome: str = None,
@@ -252,7 +300,8 @@ class SGBD:
 
 if __name__ == '__main__':
     db = SGBD()
-    db._criar_tabelas()
+    db._estruturar_banco()
+    db._inicializar_tabelas()
 
     # db.inserir_registros(tipo='categoria', categoria_nome='ROUPAS')
     # db.inserir_registros(tipo='categoria', categoria_nome='ELETRÔNICOS')

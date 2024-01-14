@@ -4,7 +4,12 @@ from pathlib import Path
 
 class Logger:
     def __init__(self):
-        self.nome_arquivo = f"{Path.home()}/OneDrive/Área de Trabalho/log_vanick.txt"
+        caminho_documentos = Path.home() / "Documents"
+        sistema_vanick_path = caminho_documentos / "Sistema Vanick"
+        sistema_vanick_path.mkdir(parents=True, exist_ok=True)
+        caminho_log = sistema_vanick_path / "vanick.log"
+
+        self.nome_arquivo = caminho_log
         self.logger = self._configurar_logger()
 
     def _configurar_logger(self):
