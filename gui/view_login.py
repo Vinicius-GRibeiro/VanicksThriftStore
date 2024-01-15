@@ -8,6 +8,16 @@ db = sgbd.SGBD()
 class ViewLogin:
     def __init__(self, pagina):
         self._pagina = pagina
+        self._usuario = mcl.CaixaDeFormularioLogin(pagina=self._pagina,
+                                                   texto='usuário', largura_container=500, altura_container=60,
+                                                   largura_caixa=100, altura_caixa=60, texto_de_prefixo='@',
+                                                   maiusculas=True, cor_prefixo=ft.colors.PINK_50)
+        self._senha = mcl.CaixaDeFormularioLogin(pagina=self._pagina,
+                                                 texto='senha', largura_container=500, altura_container=60,
+                                                 largura_caixa=100, altura_caixa=60, texto_de_prefixo='@',
+                                                 campo_de_senha=True, cor_prefixo='transparent')
+        self._botao_esqueci_a_senha = mcl.BotaoTextoLogin(pagina=self._pagina, texto='esqueci a senha')
+        self._botao_login = mcl.BotaoTextoLogin(pagina=self._pagina, texto='Entrar', do_tipo_login=True)
 
     def view_(self):
         return ft.View(
@@ -35,8 +45,44 @@ class ViewLogin:
                                 width=500,
                                 border=ft.border.only(right=ft.BorderSide(5, ft.colors.PINK_ACCENT_700)),
                                 content=ft.Column(
-                                    controls=[  # Formulário de login
+                                    controls=[
+                                        ft.Container(height=50),
+                                        ft.Row(controls=[
+                                            ft.Container(width=500, padding=ft.padding.only(top=50),
+                                                         content=ft.Icon(name=ft.icons.ACCOUNT_CIRCLE_ROUNDED,
+                                                                         size=150, color=ft.colors.PINK_50)
+                                                         ),
+                                        ]),
 
+                                        ft.Container(height=20),
+
+                                        ft.Row(controls=[
+                                            ft.Container(width=50),
+                                            ft.Icon(name=ft.icons.PERSON_ROUNDED, color=ft.colors.PINK_50, size=50),
+                                            self._usuario.item_container,
+                                            ft.Container(width=50),
+                                        ]),
+
+                                        ft.Row(controls=[
+                                            ft.Container(width=50),
+                                            ft.Icon(name=ft.icons.LOCK_ROUNDED, color=ft.colors.PINK_50, size=50),
+                                            self._senha.item_container,
+                                            ft.Container(width=50),
+                                        ]),
+
+                                        ft.Row(alignment=ft.MainAxisAlignment.END, controls=[
+                                            ft.Container(width=50),
+                                            self._botao_esqueci_a_senha.item,
+                                            ft.Container(width=50),
+                                        ]),
+
+                                        ft.Container(height=30),
+
+                                        ft.Row(alignment=ft.MainAxisAlignment.CENTER, controls=[
+                                            ft.Container(width=50),
+                                            self._botao_login.item,
+                                            ft.Container(width=50),
+                                        ])
                                     ]
                                 )
                             ),
