@@ -12,7 +12,7 @@ def controlador_de_rotas(page: ft.Page, lista_de_views: list):
         login = lista_de_views[-1]
 
         page.views.clear()
-        page.views.append(login.view_())
+        page.views.append(inicio.view_())
 
         if page.route == '/login':
             page.views.append(login.view_())

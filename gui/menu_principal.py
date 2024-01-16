@@ -1,15 +1,25 @@
 import flet as ft
-import controladores.controlador_view_vendas as ctrl_vv
+import controladores.controlador_view_vendas as ctrl_vv  # type: ignore
+import data.data_model as sgbd
+from dotenv import load_dotenv
+import os
+
+db = sgbd.SGBD()
+load_dotenv()
 
 
 class MenuPrincipal:
     def __init__(self, pagina: ft.Page):
         self.pagina = pagina
+        self._usuario_nome = os.getenv("USER_NOME").split()
+        self._usuario_nivel_acesso = os.getenv("USER_NIVEL_ACESSO")
 
+        self._primeira_inicial = self._usuario_nome[0][0].upper() if self._usuario_nome else ''
+        self._segunda_inicial = self._usuario_nome[1][0].upper() if len(self._usuario_nome) > 1 else ''
 
-    @staticmethod
-    def dados_do_usuario_atual(iniciais_usuario: str = 'UI', nome_usuario: str = 'Username',
-                               nivel_de_acesso_usuario: str = 'User Access Level') -> ft.Container:
+        self._usuario_iniciais = self._primeira_inicial + self._segunda_inicial
+
+    def dados_do_usuario_atual(self) -> ft.Container:
 
         return ft.Container(ft.Row(controls=[
             ft.Container(
@@ -17,7 +27,7 @@ class MenuPrincipal:
                 alignment=ft.alignment.center,
                 border_radius=16,
                 content=ft.Text(
-                    value=iniciais_usuario,
+                    value=self._usuario_iniciais,
                     size=40,
                     weight=ft.FontWeight.BOLD,
                     color=ft.colors.WHITE
@@ -27,8 +37,11 @@ class MenuPrincipal:
                 alignment=ft.MainAxisAlignment.CENTER,
                 spacing=2,
                 controls=[
-                    ft.Text(value=nome_usuario, size=22, weight=ft.FontWeight.BOLD, color=ft.colors.WHITE),
-                    ft.Text(value=nivel_de_acesso_usuario, size=18, weight=ft.FontWeight.BOLD, color=ft.colors.WHITE70)
+                    # ft.Text(value=f"{self._usuario_nome[0]} {self._usuario_nome[1]}", size=22, color=ft.colors.WHITE,
+                    #         weight=ft.FontWeight.BOLD),
+                    # ft.Text(value=self._usuario_nivel_acesso, size=18, weight=ft.FontWeight.BOLD,
+                    #         color=ft.colors.WHITE70)
+
                 ]
             )
         ]),
@@ -71,8 +84,18 @@ class MenuPrincipal:
         )
 
     def ao_clicar_no_botao(self, rota: str | bool = False, texto_do_botao: str | None = None):
-        self.pagina.go(rota)
+        if rota != '/sair':
+            self.pagina.go(rota)
+            return None
 
+        os.environ["USER_ID"] = 'vazio'
+        os.environ["USER_NOME"] = 'vazio'
+        os.environ["USER_LOGIN"] = 'vazio'
+        os.environ["USER_SENHA_HASH"] = 'vazio'
+        os.environ["USER_EMAIL"] = 'vazio'
+        os.environ["USER_TELEFONE"] = 'vazio'
+        os.environ["USER_NIVEL_ACESSO"] = 'vazio'
+        self.pagina.go('/')
 
     @staticmethod
     def destacar_linha(e):
@@ -107,7 +130,7 @@ class MenuPrincipal:
                     self.dados_do_usuario_atual(),
                     ft.Divider(height=30, color='transparent'),
                     self.botao_com_container(icone_do_botao=ft.icons.HOME_ROUNDED, texto_do_botao='Início',
-                                             rota='/'),
+                                             rota='/inicio'),
                     self.botao_com_container(icone_do_botao=ft.icons.INVENTORY_ROUNDED, texto_do_botao='Produtos',
                                              rota='/produtos'),
                     self.botao_com_container(icone_do_botao=ft.icons.SHOPPING_CART_ROUNDED, texto_do_botao='Vendas',
@@ -116,7 +139,7 @@ class MenuPrincipal:
                                              rota='/configuracoes'),
                     ft.Divider(height=10, color='transparent'),
                     ft.Divider(height=30, color=ft.colors.PINK_ACCENT_700),
-                    self.botao_com_container(icone_do_botao=ft.icons.LOGOUT_ROUNDED, texto_do_botao='Sair', rota='/')
+                    self.botao_com_container(icone_do_botao=ft.icons.LOGOUT_ROUNDED, texto_do_botao='Sair', rota='/sair')
                 ])
             )
         )

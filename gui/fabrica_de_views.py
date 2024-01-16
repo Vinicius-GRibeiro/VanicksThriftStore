@@ -1,5 +1,8 @@
 import flet as ft
 import gui.menu_principal as menu
+import data.data_model as sgbd
+
+db = sgbd.SGBD()
 
 largura = 720 * 1.9
 altura = 405 * 1.9
@@ -12,6 +15,7 @@ class ConstruirView:
         self.rota = rota
         self.controles_submenu = controles_submenu
         self.controles_principais = controles_principais
+
 
     def construir_view(self) -> ft.View:
         return ft.View(

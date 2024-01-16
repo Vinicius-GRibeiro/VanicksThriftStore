@@ -2,10 +2,13 @@ import sqlite3
 from pathlib import Path
 from data.registros import Logger
 from datetime import datetime
+from dotenv import load_dotenv
+from flet.security import encrypt
 import os
 
 _possiveis_excecoes = (sqlite3.DataError, sqlite3.OperationalError, sqlite3.IntegrityError, sqlite3.ProgrammingError,
                        sqlite3.InterfaceError, sqlite3.InternalError, sqlite3.DatabaseError, sqlite3.Error)
+load_dotenv()
 
 
 class SGBD:
@@ -100,12 +103,25 @@ class SGBD:
                 );
             '''
 
+            criar_usuarios = f'''
+                            CREATE TABLE IF NOT EXISTS usuario (
+                                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                nome TEXT NOT NULL,
+                                login_usuario TEXT NOT NULL,
+                                login_senha TEXT NOT NULL,
+                                email TEXT NOT NULL,
+                                telefone TEXT NOT NULL,
+                                nivel_acesso TEXT
+                            );
+                        '''
+
             self._cursor.execute(criar_controle_de_versao)
             self._cursor.execute(criar_venda)
             self._cursor.execute(criar_itens_venda)
             self._cursor.execute(criar_categoria)
             self._cursor.execute(criar_estado)
             self._cursor.execute(criar_produto)
+            self._cursor.execute(criar_usuarios)
 
             self._conexao.commit()
 
@@ -117,7 +133,7 @@ class SGBD:
     def _inicializar_tabelas(self):
         try:
             self._conectar()
-            tabelas = ('categoria', 'estado', 'venda', 'itens_venda', 'produto', 'controle_versao')
+            tabelas = ('categoria', 'estado', 'venda', 'itens_venda', 'produto')
 
             for tabela in tabelas:
                 if tabela != 'controle_versao':
@@ -126,14 +142,19 @@ class SGBD:
             self._conexao.commit()
 
             for tabela in tabelas:
-                if tabela != 'controle_versao':
                     query = f'DELETE FROM {tabela} WHERE id = (SELECT MIN(id) FROM {tabela});'
                     self._cursor.execute(query)
 
             query = f"INSERT INTO controle_versao (versaoSoftware, versaoBancoDeDados, dataRelease, changeLog) VALUES (?, ?, ?, ?)"
-
             data = datetime.now().strftime("%d/%m/%Y")
             valores = ('1.0.0', '1.0.1', data, 'Primeira execução',)
+            self._cursor.execute(query, valores)
+
+            query = f"INSERT INTO usuario (nome, login_usuario, login_senha, email, telefone, nivel_acesso) VALUES (?, ?, ?, ?, ?, ?)"
+            valores = ('Vinícius Ribeiro', 'DEV_VINICIUS_RIBEIRO',
+                       'k80WgpoCHUoW4SIPLO89rmdBQUFBQUJscFRtUl9rclRNZWIyOUpOY2JYeGFsLUhBYzd1OE9laU9teFd6aGw5VTJJd2ppd3R'
+                       'lOG5KVF9nME1jYnlKOWY5UDFKM2lnNS1WMWR3aEcyRkZ3R3g2SkZKUWxBPT0=',
+                       'viniciusgn.ribeiro@gmail.com', '11975712671', 'DESENVOLVEDOR',)
             self._cursor.execute(query, valores)
 
             self._conexao.commit()

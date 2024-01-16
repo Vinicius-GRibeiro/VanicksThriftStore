@@ -16,8 +16,10 @@ class ViewLogin:
                                                  texto='senha', largura_container=500, altura_container=60,
                                                  largura_caixa=100, altura_caixa=60, texto_de_prefixo='@',
                                                  campo_de_senha=True, cor_prefixo='transparent')
+
         self._botao_esqueci_a_senha = mcl.BotaoTextoLogin(pagina=self._pagina, texto='esqueci a senha')
-        self._botao_login = mcl.BotaoTextoLogin(pagina=self._pagina, texto='Entrar', do_tipo_login=True)
+        self._botao_login = mcl.BotaoTextoLogin(pagina=self._pagina, texto='Entrar', do_tipo_login=True,
+                                                usuario=self._usuario.item, senha=self._senha.item)
 
     def view_(self):
         return ft.View(

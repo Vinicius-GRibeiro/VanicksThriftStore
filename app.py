@@ -5,6 +5,7 @@ import gui.view_inicio as vi
 import gui.view_vendas as vv
 import gui.view_configuracoes as vc
 import gui.view_login as vl
+import os
 
 largura = 720 * 1.9
 altura = 405 * 1.9
@@ -45,6 +46,13 @@ def main(page: ft.Page):
                                                           view_configuracoes, view_login])
 
     def confirmar_fechar_janela_ao_clicar_no_sim(e):
+        os.environ["USER_ID"] = 'vazio'
+        os.environ["USER_NOME"] = 'vazio'
+        os.environ["USER_LOGIN"] = 'vazio'
+        os.environ["USER_SENHA_HASH"] = 'vazio'
+        os.environ["USER_EMAIL"] = 'vazio'
+        os.environ["USER_TELEFONE"] = 'vazio'
+        os.environ["USER_NIVEL_ACESSO"] = 'vazio'
         page.window_destroy()
 
     def confirmar_fechar_janela_ao_clicar_no_nao(e):
@@ -53,7 +61,7 @@ def main(page: ft.Page):
 
     confirmar_fechar_dialogo_de_confirmacao = ft.AlertDialog(
         modal=True,
-        title=ft.Text("Por favor, confirme", color=ft.colors.PINK_ACCENT_700),
+        title=ft.Text("Por favor, confirme", color=ft.colors.PINK_ACCENT_700, weight=ft.FontWeight.BOLD),
         content=ft.Text("Você realmente deseja fechar o programa?"),
         actions=[
             ft.TextButton(text='Sim, encerrar o programa',

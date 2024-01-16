@@ -36,7 +36,6 @@ class ViewInicio:
                                             content=ft.Row(
                                                 controls=[
                                                     menu.MenuPrincipal(self.pagina).build(),
-
                                                 ],
                                             ),
                                         )
