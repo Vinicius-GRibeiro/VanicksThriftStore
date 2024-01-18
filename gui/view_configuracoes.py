@@ -13,22 +13,41 @@ class ViewConfiguracoes:
         '''--------------------CONTROLES DA ABA #CONTA--------------------'''
         self.conta_usuario_codigo = mcc.CaixaDeTextoBordaUnica(pagina=self._pagina, label='Cód.', largura_caixa=100,
                                                                largura_container=100, altura_container=60,
-                                                               altura_caixa=300)
+                                                               altura_caixa=300, somente_leitura=True)
         self.conta_usuario_nome = mcc.CaixaDeTextoBordaUnica(pagina=self._pagina, label='Nome', largura_caixa=300,
                                                              largura_container=500, altura_container=60,
                                                              altura_caixa=300)
         self.conta_usuario_usuario = mcc.CaixaDeTextoBordaUnica(pagina=self._pagina, label='Usuário', largura_caixa=300,
                                                                 largura_container=300, altura_container=60,
-                                                                altura_caixa=300)
+                                                                altura_caixa=300, maiusculo=True)
         self.conta_usuario_email = mcc.CaixaDeTextoBordaUnica(pagina=self._pagina, label='E-mail', largura_caixa=300,
                                                               largura_container=300, altura_container=60,
                                                               altura_caixa=300)
         self.conta_usuario_telefone = mcc.CaixaDeTextoBordaUnica(pagina=self._pagina, label='Telefone',
                                                                  largura_caixa=300, largura_container=300,
-                                                                 altura_container=60, altura_caixa=300)
+                                                                 altura_container=60, altura_caixa=300,
+                                                                 regex_filtro="^[0-9]+$")
         self.conta_usuario_nivel = mcc.CaixaDeTextoBordaUnica(pagina=self._pagina, label='Nível de acesso',
                                                               largura_caixa=300, largura_container=300,
-                                                              altura_container=60, altura_caixa=300)
+                                                              altura_container=60, altura_caixa=300,
+                                                              somente_leitura=True)
+        self.contas_controles = [self.conta_usuario_codigo.item,
+                                 self.conta_usuario_nome.item,
+                                 self.conta_usuario_usuario.item,
+                                 self.conta_usuario_email.item,
+                                 self.conta_usuario_telefone.item,
+                                 self.conta_usuario_nivel.item]
+
+        self.conta_botao_salvar_alteracoes = mcc.BotaoTextoPadraoConta(pagina=self._pagina, texto='Salvar alterações',
+                                                                       tipo='conta_salvar_alteracoes',
+                                                                       icone=ft.icons.SAVE_ROUNDED,
+                                                                       largura=200, altura=50, tamanho_icone=25,
+                                                                       controles_da_aba=self.contas_controles)
+        self.conta_botao_alterar_senha = mcc.BotaoTextoPadraoConta(pagina=self._pagina, texto='Alterar senha',
+                                                                   tipo='conta_alterar_senha',
+                                                                   icone=ft.icons.LOCK_ROUNDED,
+                                                                   largura=200, altura=50, tamanho_icone=25,
+                                                                   controles_da_aba=self.contas_controles)
 
         #  Últimos controles
         self._tab = mcc.Abas(pagina=self._pagina, conteudo_tab_1=self.conteudo_tab_1(),
@@ -37,7 +56,7 @@ class ViewConfiguracoes:
 
         self.submenu_botao_conta = mcc.BotaoParaOSubMenu(pagina=self._pagina, icone=ft.icons.ACCOUNT_CIRCLE_ROUNDED,
                                                          texto='Conta', tamanho_icone=40, tamanho_texto=15,
-                                                         tabs=self._tab)
+                                                         tabs=self._tab, caixas_de_texto=self.contas_controles)
         self.submenu_botao_gerais = mcc.BotaoParaOSubMenu(pagina=self._pagina, icone=ft.icons.TUNE_ROUNDED,
                                                           texto='Geral', tamanho_icone=40, tamanho_texto=15,
                                                           tabs=self._tab)
@@ -161,6 +180,18 @@ class ViewConfiguracoes:
                             width=600,
                             controls=[
 
+                            ]
+                        )
+                    ),
+
+                    ft.Container(  # Quinta linha de conteúdo - Botões
+                        padding=ft.padding.only(left=100, right=90),
+                        content=ft.Row(  # Terceira linha de conteúdo
+                            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                            width=650,
+                            controls=[
+                                self.conta_botao_salvar_alteracoes.item_container,
+                                self.conta_botao_alterar_senha.item_container
                             ]
                         )
                     ),

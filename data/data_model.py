@@ -106,11 +106,11 @@ class SGBD:
             criar_usuarios = f'''
                             CREATE TABLE IF NOT EXISTS usuario (
                                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                                nome TEXT NOT NULL,
-                                login_usuario TEXT NOT NULL,
-                                login_senha TEXT NOT NULL,
-                                email TEXT NOT NULL,
-                                telefone TEXT NOT NULL,
+                                nome TEXT,
+                                login_usuario TEXT,
+                                login_senha TEXT,
+                                email TEXT,
+                                telefone TEXT,
                                 nivel_acesso TEXT
                             );
                         '''
@@ -316,7 +316,36 @@ class SGBD:
         finally:
             self._desconectar()
 
+    def editar_registro_usuario(self, id_: int, nome: str = None, login: str = None, email: str = None,
+                                telefone: str = None, senha: str = None):
+        query_update = None
+        query_consulta = None
+        valores = None
 
+        try:
+            antes = self.recuperar_registros(tabela='usuario', condicao=f'id = {id_}')
+
+            self._conectar()
+            if senha is None:
+                query_update = ("UPDATE usuario "
+                                "SET nome = ?, login_usuario = ?, email = ?, telefone = ? "
+                                f"WHERE id = {id_}")
+                valores = (nome, login, email, telefone)
+            else:
+                query_update = f"UPDATE usuario SET login_senha = ? WHERE id = {id_}"
+                valores = (senha,)
+
+            self._cursor.execute(query_update, valores)
+            self._conexao.commit()
+
+            self._log.registrar_info(mensagem=f'Registro de usuário editado.\n\tANTES: {antes}\n\tDEPOIS: {valores}\n')
+            return True
+        except _possiveis_excecoes as e:
+            self._log.registrar_erro(mensagem=f'Erro ao editar registro de usuário. PRODUTO: {id_} - {valores}\n\t'
+                                              f'Descrição do erro: {e}\n')
+            return False
+        finally:
+            self._desconectar()
 
 
 if __name__ == '__main__':

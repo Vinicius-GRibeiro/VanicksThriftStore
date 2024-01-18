@@ -37,10 +37,10 @@ class MenuPrincipal:
                 alignment=ft.MainAxisAlignment.CENTER,
                 spacing=2,
                 controls=[
-                    # ft.Text(value=f"{self._usuario_nome[0]} {self._usuario_nome[1]}", size=22, color=ft.colors.WHITE,
-                    #         weight=ft.FontWeight.BOLD),
-                    # ft.Text(value=self._usuario_nivel_acesso, size=18, weight=ft.FontWeight.BOLD,
-                    #         color=ft.colors.WHITE70)
+                    ft.Text(value=f"{self._usuario_nome[0]} {self._usuario_nome[1]}", size=22, color=ft.colors.WHITE,
+                            weight=ft.FontWeight.BOLD),
+                    ft.Text(value=self._usuario_nivel_acesso, size=18, weight=ft.FontWeight.BOLD,
+                            color=ft.colors.WHITE70)
 
                 ]
             )
